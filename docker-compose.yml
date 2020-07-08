@@ -1,0 +1,86 @@
+version: '3'
+services:
+
+  dsw_server:
+    image: datastewardshipwizard/wizard-server:2.5.0
+    restart: always
+    hostname: dsw_server
+    depends_on:
+      - rabbitmq
+      - mongo
+    volumes:
+      - ./dsw-server/application.yml:/application/engine-wizard/config/application.yml:ro
+      - ./dsw-server/integration.yml:/application/engine-wizard/config/integration.yml:ro
+    ports:
+      - 3000:3000
+
+  dsw_client:
+    image: datastewardshipwizard/wizard-client:2.5.0
+    restart: always
+    hostname: dsw_client
+    environment:
+    # (!) Change API_URL
+    #   API_URL: <dsw-url>
+        API_URL: http://localhost:3000
+    volumes:
+     - ./dsw-client/variables.scss:/src/scss/customizations/_variables.scss:ro
+     - ./dsw-client/assets:/usr/share/nginx/html/assets:ro
+     - ./dsw-client/configuration/provisioning.json:/configuration/provisioning.json:ro
+     - ./dsw-client/favicon.ico:/usr/share/nginx/html/favicon.ico:ro
+    ports:
+     - 8080:80
+
+  docworker:
+    image: datastewardshipwizard/document-worker:2.5.0
+    restart: always
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./docworker/config.yml:/app/config.yml:ro
+
+  mongo:
+    image: mongo:4.2.3
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: wizard
+    volumes:
+     - ./mongo/data:/data/db
+     - ./mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  fdp:
+    image: fairdata/fairdatapoint:1.6.0
+    hostname: fdp
+    volumes:
+      - ./fdp/application.yml:/fdp/application.yml:ro
+
+  fdp_client:
+    image: fairdata/fairdatapoint-client:1.6.0
+    hostname: fdp_client
+    environment:
+      - FDP_HOST=fdp
+    volumes:
+      - ./fdp-client/variables.scss:/src/scss/custom/_variables.scss:ro
+      - ./fdp-client/assets:/usr/share/nginx/html/assets:ro
+      - ./fdp-client/favicon.ico:/usr/share/nginx/html/favicon.ico:ro
+    ports:
+      - 8081:80
+
+  blazegraph:
+      image: metaphacts/blazegraph-basic:2.2.0-20160908.003514-6
+      volumes:
+          - ./blazegraph:/blazegraph-data
+
+  json_server:
+    image: clue/json-server
+    hostname: json_server
+    volumes:
+      - "./json-server/db.json:/data/db.json:ro"
