@@ -19,8 +19,6 @@ services:
     restart: always
     hostname: dsw_client
     environment:
-    # (!) Change API_URL
-    # API_URL: <dsw-url>
       API_URL: http://localhost:3000
     volumes:
       - ./dsw-client/variables.scss:/src/scss/customizations/_variables.scss:ro
@@ -66,7 +64,7 @@ services:
     image: fairdata/fairdatapoint-client:1.6.0
     hostname: fdp_client
     environment:
-      - FDP_HOST=fdp
+      FDP_HOST: fdp
     volumes:
       - ./fdp-client/variables.scss:/src/scss/custom/_variables.scss:ro
       - ./fdp-client/assets:/usr/share/nginx/html/assets:ro
@@ -81,6 +79,17 @@ services:
     volumes:
       - ./blazegraph:/blazegraph-data
 
+  # agraph:
+  #   image: franzinc/agraph:v7.0.1
+  #   restart: always
+  #   ports:
+  #     - 10000-10035:10000-10035
+  #   hostname: agraph
+  #   shm_size: '1gb'
+  #   volumes:
+  #     - ./agraph/data:/agraph/data/
+  #     - ./agraph/agraph.cfg:/agraph/etc/agraph.cfg
+
   json_server:
     image: clue/json-server
     hostname: json_server
@@ -88,7 +97,7 @@ services:
       - ./json-server/db.json:/data/db.json:ro
 
   submission_service:
-    image: datastewardshipwizard/triple-store-submission-service:1.0.0
+    image: datastewardshipwizard/triple-store-submission-service:1.1.0
     restart: always
     hostname: submission_service
     volumes:
